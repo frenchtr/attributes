@@ -39,7 +39,7 @@ healthAttribute.AddModifier(buff);
 ```
 
 ### Custom calculation strategy
-Implement ICalculationStrategy to create custom logic for calculating the modified value of an attribute.
+Implement `ICalculationStrategy` to create custom logic for calculating the modified value of an attribute.
 
 #### Defining a custom calculation strategy
 ```csharp
