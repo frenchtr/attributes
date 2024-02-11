@@ -7,27 +7,27 @@ This package provides a flexible and extensible system for managing attributes i
 - **Attribute Management**: Define and manage base values for any game attribute.
 - **Modifiers**: Apply modifiers to attributes, supporting flat additions, multiplicative factors, and percentage-based adjustments.
 - **Custom Calculation Strategies**: Implement custom strategies for calculating modified attribute values using the Strategy pattern.
-- **Serialization Support**: Attributes and modifiers are `[Serializable]`, allowing them to be easily integrated with Unity's serialization system.
+- **Serialization Support**: Attributes and modifiers are `[Serializable]`, allowing them to be easily integrated with Unity's serialization system and adjusted in the inspector.
 
 ## Installation
-To install the Attribute System Package, follow these steps:
+To install the Attribute System Package via Unity's Package Manager with a .git URL, follow these steps:
 
-1. Download the latest package release.
-2. In your Unity project, navigate to `Assets -> Import Package -> Custom Package`.
-3. Select the downloaded package file and click `Open`.
-4. Ensure all files are selected and click `Import`.
+- Open your Unity project.
+- Navigate to `Window` `->` `Package Manager` to open the Package Manager window.
+- Click the `+` button at the top left of the Package Manager window.
+- Select `Add package from git URL...`.
+- Enter the following .git URL: `https://github.com/frenchtr/attributes.git`
+- Click Add. Unity will now resolve the package and download it into your project.
 
 ## Usage
 
-### Defining an Attribute
+### Defining an attribute
 ```csharp
-using TravisRFrench.Attributes.Runtime;
-
 // Create a new attribute with a base value
 var healthAttribute = new Attribute { BaseValue = 100f };
 ```
 
-### Applying Modifiers
+### Applying modifiers
 ```csharp
 // Create a flat additive modifier
 var bonusHealth = new AttributeModifier { Type = ModifierType.FlatAdditive, Value = 25f };
@@ -38,8 +38,10 @@ var buff = new AttributeModifier { Type = ModifierType.PercentAdditive, Value = 
 healthAttribute.AddModifier(buff);
 ```
 
-### Custom Calculation Strategy
+### Custom calculation strategy
 Implement ICalculationStrategy to create custom logic for calculating the modified value of an attribute.
+
+#### Defining a custom calculation strategy
 ```csharp
 public class CustomCalculationStrategy : ICalculationStrategy
 {
@@ -48,18 +50,21 @@ public class CustomCalculationStrategy : ICalculationStrategy
         // Custom calculation logic
     }
 }
+```
 
+#### Using the strategy
+```csharp
 // Apply the custom strategy
 healthAttribute.UseCalculationStrategy(new CustomCalculationStrategy());
 ```
-### Accessing Modified Value
+### Accessing modified value
 ```csharp
 var modifiedHealth = healthAttribute.ModifiedValue;
 ```
-### Running Tests
+### Running tests
 This package includes unit tests to ensure the reliability of its core functionalities. To run the tests:
 
-Open the Unity Test Runner via `Window` -> `General` -> `Test Runner`.
+Open the Unity Test Runner via `Window` `->` `General` `->` `Test Runner`.
 Navigate to the `EditMode` tab.
 Click Run All to execute all tests.
 
