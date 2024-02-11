@@ -1,6 +1,6 @@
 {
-    "name": "TravisRFrench.Attributes",
-    "rootNamespace": "TravisRFrench.Attributes",
+    "name": "TravisRFrench.Attributes.Runtime",
+    "rootNamespace": "TravisRFrench.Attributes.Runtime",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
