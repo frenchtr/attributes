@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace TravisRFrench.Attributes.Runtime
 {
+    /// <summary>
+    /// Represents a modifiable attribute that can have modifiers applied to it
+    /// and uses a calculation strategy to determine its modified value.
+    /// </summary>
     [Serializable]
     public class Attribute : IReadOnlyAttribute
     {
@@ -13,8 +18,13 @@ namespace TravisRFrench.Attributes.Runtime
         private float modifiedValue;
         [SerializeField]
         private List<AttributeModifier> modifiers;
+        private ICalculationStrategy strategy;
         private bool isDirty = true;
 
+        /// <summary>
+        /// Gets or sets the base value of the attribute. Setting this value marks the attribute as dirty
+        /// and triggers recalculation of the modified value.
+        /// </summary>
         public float BaseValue
         {
             get => this.baseValue;
@@ -25,6 +35,10 @@ namespace TravisRFrench.Attributes.Runtime
                 this.NotifyModified();
             }
         }
+
+        /// <summary>
+        /// Gets the modified value of the attribute, recalculating it if necessary.
+        /// </summary>
         public float ModifiedValue
         {
             get
@@ -38,14 +52,26 @@ namespace TravisRFrench.Attributes.Runtime
             }
         }
 
+        /// <summary>
+        /// Event that is triggered whenever the attribute's modified value changes.
+        /// </summary>
         public event Action<Attribute> Modified;
         
+        /// <summary>
+        /// Initializes a new instance of the Attribute class with an empty list of modifiers.
+        /// </summary>
         public Attribute()
         {
+            this.strategy = new CalculationStrategy();
             this.modifiers = new List<AttributeModifier>();
         }
 
-        public void AddModifier(AttributeModifier modifier)
+        /// <summary>
+        /// Adds a modifier to the attribute. If the modifier is already present, it will not be added again.
+        /// Adding a modifier marks the attribute as dirty and triggers recalculation.
+        /// </summary>
+        /// <param name="modifier">The modifier to add.</param>
+        public void AddModifier([NotNull] AttributeModifier modifier)
         {
             if (this.modifiers.Contains(modifier))
             {
@@ -57,7 +83,12 @@ namespace TravisRFrench.Attributes.Runtime
             this.NotifyModified();
         }
 
-        public void RemoveModifier(AttributeModifier modifier)
+        /// <summary>
+        /// Removes a modifier from the attribute. If the modifier is not present, no action is taken.
+        /// Removing a modifier marks the attribute as dirty and triggers recalculation.
+        /// </summary>
+        /// <param name="modifier">The modifier to remove.</param>
+        public void RemoveModifier([NotNull] AttributeModifier modifier)
         {
             if (!this.modifiers.Contains(modifier))
             {
@@ -69,6 +100,9 @@ namespace TravisRFrench.Attributes.Runtime
             this.NotifyModified();
         }
 
+        /// <summary>
+        /// Clears all modifiers from the attribute, marks it as dirty, and triggers recalculation.
+        /// </summary>
         public void ClearModifiers()
         {
             this.modifiers.Clear();
@@ -76,52 +110,39 @@ namespace TravisRFrench.Attributes.Runtime
             this.NotifyModified();
         }
 
+        /// <summary>
+        /// Forces the recalculation of the attribute's modified value immediately.
+        /// </summary>
         public void ForceRecalculateModifiedValue()
         {
             this.modifiedValue = this.CalculateModifiedValue();
             this.isDirty = false;
         }
 
+        /// <summary>
+        /// Sets the calculation strategy used to determine the attribute's modified value.
+        /// </summary>
+        /// <param name="strategy">The calculation strategy to use.</param>
+        public void UseCalculationStrategy([NotNull] ICalculationStrategy strategy)
+        {
+            this.strategy = strategy;
+        }
+
+        /// <summary>
+        /// Notifies subscribers that the attribute has been modified.
+        /// </summary>
         private void NotifyModified()
         {
             this.Modified?.Invoke(this);
         }
         
+        /// <summary>
+        /// Calculates the modified value of the attribute using the assigned calculation strategy.
+        /// </summary>
+        /// <returns>The calculated modified value.</returns>
         private float CalculateModifiedValue()
         {
-            var result = this.BaseValue;
-            var sumOfPercentAdditiveModifiers = 0f;
-
-            for (var i = 0; i < this.modifiers.Count; i++)
-            {
-                var modifier = this.modifiers[i];
-                
-                switch (modifier.Operand)
-                {
-                    case ModifierOperand.FlatAdditive:
-                        result += modifier.Value;
-                        break;
-                    case ModifierOperand.PercentAdditive:
-                        sumOfPercentAdditiveModifiers += modifier.Value;
-                        
-                        if (i + 1 >= this.modifiers.Count || this.modifiers[i + 1].Operand != ModifierOperand.PercentAdditive)
-                        {
-                            result *= 1 + sumOfPercentAdditiveModifiers;
-                            sumOfPercentAdditiveModifiers = 0f;
-                        }
-
-                        break;
-                    case ModifierOperand.PercentMultiplicative:
-                        result *= 1 + modifier.Value;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-            
-            result = (float) Math.Round(result, 4);
-            
-            return result;
+            return this.strategy?.Calculate(this.baseValue, this.modifiers) ?? this.baseValue;
         }
     }
 }
