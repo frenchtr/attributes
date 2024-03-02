@@ -17,23 +17,25 @@ namespace TravisRFrench.Attributes.Runtime
         public virtual float Calculate(float baseValue, IEnumerable<AttributeModifier> modifiers)
         {
             var result = baseValue;
-
+            var attributeModifiers = modifiers.ToList();
+            
             // Sum of all flat additive modifiers. These are applied directly to the base value.
-            var sumOfFlatAdditiveMultipliers = modifiers
+            
+            var sumOfFlatAdditiveMultipliers = attributeModifiers
                 .Where(modifier => modifier.Type == ModifierType.FlatAdditive)
                 .Select(modifier => modifier.Value)
                 .Sum();
             
             // Total impact of percent additive modifiers on the base value.
             // This calculates how much to add to the base value based on a percentage.
-            var percentAdditiveTotalImpact = baseValue * modifiers
+            var percentAdditiveTotalImpact = baseValue * attributeModifiers
                 .Where(modifier => modifier.Type == ModifierType.PercentAdditive)
                 .Sum(modifier => modifier.Value);
 
             // Multiplicative factor from all flat multiplicative modifiers.
             // This factor is calculated by multiplying all such modifiers together,
             // then applied to the current result.
-            var multiplicativeFactor = modifiers
+            var multiplicativeFactor = attributeModifiers
                 .Where(modifier => modifier.Type == ModifierType.FlatMultiplicative)
                 .Aggregate(1.0f, (current, modifier) => current * modifier.Value);
             
@@ -41,13 +43,13 @@ namespace TravisRFrench.Attributes.Runtime
             // Similar to flat multiplicative, but these are based on a percentage increase or decrease,
             // calculated by aggregating each modifier as a factor (1 + modifier.Value),
             // then applied to the current result.
-            var multiplicativePercentFactor = modifiers
+            var multiplicativePercentFactor = attributeModifiers
                 .Where(modifier => modifier.Type == ModifierType.PercentMultiplicative)
                 .Aggregate(1.0f, (current, modifier) => current * (1 + modifier.Value));
             
             // Check for the presence of an override modifier.
             // If one exists, it sets the result to a specific value, ignoring all previous calculations.
-            var overrideModifier = modifiers
+            var overrideModifier = attributeModifiers
                 .LastOrDefault(modifier => modifier.Type == ModifierType.Override);
 
             // Apply the sum of flat additive multipliers and the percent additive total impact to the result.
