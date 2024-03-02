@@ -17,7 +17,9 @@ namespace TravisRFrench.Attributes.Runtime
         public virtual float Calculate(float baseValue, IEnumerable<AttributeModifier> modifiers)
         {
             var result = baseValue;
-            var attributeModifiers = modifiers.ToList();
+            var attributeModifiers = modifiers
+                .Where(modifier => modifier != null)
+                .ToList();
             
             // Sum of all flat additive modifiers. These are applied directly to the base value.
             
